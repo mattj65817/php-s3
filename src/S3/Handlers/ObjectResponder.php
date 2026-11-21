@@ -54,8 +54,8 @@ final class ObjectResponder
             // admin session. Images, media and downloads are unaffected.
             'Content-Security-Policy' => 'sandbox',
         ];
-        foreach (['content-encoding' => 'Content-Encoding', 'content-disposition' => 'Content-Disposition',
-                  'cache-control' => 'Cache-Control', 'content-language' => 'Content-Language'] as $dbCol => $header) {
+        foreach (['content_encoding' => 'Content-Encoding', 'content_disposition' => 'Content-Disposition',
+                  'cache_control' => 'Cache-Control', 'content_language' => 'Content-Language'] as $dbCol => $header) {
             if (!empty($object[$dbCol])) {
                 $headers[$header] = (string) $object[$dbCol];
             }

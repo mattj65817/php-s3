@@ -991,7 +991,7 @@ CSS;
             . 'x.upload.onprogress=function(ev){if(ev.lengthComputable){p.value=Math.round(ev.loaded/ev.total*100);if(status&&file)status.textContent="Uploading "+file.name+" — "+p.value+"%";}};'
             . 'x.onload=function(){if(x.status>=200&&x.status<400){location.reload();}else{if(btn)btn.disabled=false;if(status)status.textContent="Upload failed ("+x.status+"). Check your quota and host upload limit.";alert("Upload failed. Check your quota and host upload limit.");}};'
             . 'x.onerror=function(){if(btn)btn.disabled=false;if(status)status.textContent="Upload failed. Check the connection and try again.";alert("Upload failed. Check the connection and try again.");};'
-            . 'x.open("POST",form.action);x.send(new FormData(form));});}'
+            . 'x.open("POST",form.getAttribute("action"));x.send(new FormData(form));});}'
             . '})();</script>';
     }
 

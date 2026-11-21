@@ -189,6 +189,32 @@ final class FileManagerViewTest extends TestCase
         self::assertStringContainsString('onchange="this.form.submit()"', $console->body);
     }
 
+    public function testUploadScriptReadsActionAttributeDespiteNamedActionInput(): void
+    {
+        $admin = Views::files(
+            ['id' => 1, 'username' => 'root-admin'],
+            [['name' => 'photos']],
+            'photos',
+            [],
+            'csrf-token',
+        );
+        $console = Views::consoleFiles(
+            ['id' => 9, 'username' => 'owner', 'role' => 'user'],
+            [['name' => 'photos']],
+            'photos',
+            '',
+            [],
+            [],
+            'csrf-token',
+        );
+
+        foreach ([$admin, $console] as $response) {
+            self::assertStringContainsString('name="action" value="upload"', $response->body);
+            self::assertStringContainsString('x.open("POST",form.getAttribute("action"))', $response->body);
+            self::assertStringNotContainsString('x.open("POST",form.action)', $response->body);
+        }
+    }
+
     public function testConsoleShowsLastModifiedDateFromListing(): void
     {
         $response = Views::consoleFiles(

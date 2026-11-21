@@ -23,6 +23,7 @@ namespace PhpS3\Tests\Unit;
 
 use PhpS3\S3\Handlers\ObjectResponder;
 use PhpS3\Storage\LocalFilesystemStorage;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 final class ObjectResponderTest extends TestCase
@@ -68,6 +69,62 @@ final class ObjectResponderTest extends TestCase
 
         self::assertSame(200, $response->status);
         self::assertSame('sandbox', $response->headers['Content-Security-Policy']);
+    }
+
+    #[DataProvider('objectResponseVariants')]
+    public function testStoredResponseMetadataIsReturned(
+        string $method,
+        bool $headOnly,
+        array $requestHeaders,
+        int $status,
+        string $length,
+    ): void {
+        $object = $this->storedObject('text/csv') + [
+            'content_encoding' => 'br',
+            'content_disposition' => 'attachment; filename="log.csv"',
+            'cache_control' => 'private, no-transform',
+            'content_language' => 'en',
+        ];
+        $response = $this->responder()->get(
+            php_s3_test_request($method, '/b/page.html', $requestHeaders),
+            $object,
+            $headOnly,
+        );
+
+        self::assertSame($status, $response->status);
+        self::assertSame('text/csv', $response->headers['Content-Type']);
+        self::assertSame('br', $response->headers['Content-Encoding']);
+        self::assertSame('attachment; filename="log.csv"', $response->headers['Content-Disposition']);
+        self::assertSame('private, no-transform', $response->headers['Cache-Control']);
+        self::assertSame('en', $response->headers['Content-Language']);
+        self::assertSame($length, $response->headers['Content-Length']);
+    }
+
+    public static function objectResponseVariants(): array
+    {
+        return [
+            'GET' => ['GET', false, [], 200, '25'],
+            'HEAD' => ['HEAD', true, [], 200, '25'],
+            'ranged GET' => ['GET', false, ['range' => 'bytes=0-4'], 206, '5'],
+        ];
+    }
+
+    public function testEmptyResponseMetadataIsNotReturned(): void
+    {
+        $object = $this->storedObject('text/csv') + [
+            'content_encoding' => null,
+            'content_disposition' => '',
+            'cache_control' => null,
+            'content_language' => '',
+        ];
+        $response = $this->responder()->get(
+            php_s3_test_request('GET', '/b/page.html'),
+            $object,
+        );
+
+        foreach (['Content-Encoding', 'Content-Disposition', 'Cache-Control', 'Content-Language'] as $header) {
+            self::assertArrayNotHasKey($header, $response->headers);
+        }
     }
 
     private function responder(): ObjectResponder
